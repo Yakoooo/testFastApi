@@ -10,10 +10,10 @@ class TaskStatus(str, Enum):
     done = "done"
 
 
-class taskInfo(BaseModel):
+class TaskCreate(BaseModel):
     title:str
     description: str | None = None
-    status: TaskStatus = "todo"
+    status: TaskStatus = TaskStatus.todo
     project_id: int
 
 

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-from app.schemas.tasks import TaskResponse, TaskUpdate, taskInfo
+from app.schemas.tasks import TaskResponse, TaskUpdate, TaskCreate
 from ....data.taks import tasks
 from app.db.deps import get_db
 from app.models.tasks import Task
@@ -31,7 +31,7 @@ def by_id_to_task(id: int, db: Session = Depends(get_db)):
 
 # 创建数据
 @router.post('/tasks', response_model=TaskResponse, summary="创建任务", description='创建一条新任务')
-def create_task(item: taskInfo, db: Session = Depends(get_db)):
+def create_task(item: TaskCreate, db: Session = Depends(get_db)):
     task = Task(**item.model_dump())
     db.add(task)
     db.commit()
