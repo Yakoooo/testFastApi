@@ -1,0 +1,7 @@
+Generic single-database configuration.
+
+自动对比 生成任务
+alembic revision --autogenerate -m "info"
+
+执行迁移
+alembic upgrade head

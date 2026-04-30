@@ -1,0 +1,10 @@
+from fastapi import APIRouter
+
+router = APIRouter(
+    prefix='/health',
+    tags=['health']
+)
+
+@router.get('/status')
+def getStatus():
+    return { "status": 'ok' }
