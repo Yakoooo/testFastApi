@@ -21,5 +21,5 @@ class Task(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True, default=lambda: datetime.now(UTC))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False, index=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", onupdate="CASCADE", ondelete="CASCADE"), nullable=False, index=True)
     project: Mapped["Project"] = relationship("Project", back_populates="tasks")
