@@ -23,3 +23,6 @@ class Task(Base):
 
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", onupdate="CASCADE", ondelete="CASCADE"), nullable=False, index=True)
     project: Mapped["Project"] = relationship("Project", back_populates="tasks")
+    # 创作者和受让人
+    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    assignee_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
