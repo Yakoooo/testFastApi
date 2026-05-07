@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.crud import task as crud_tasks, project as crud_project
 from app.schemas.tasks import TaskResponse, TaskUpdate, TaskCreate
 from app.db.deps import get_db
+from app.models.user import User
 
 router = APIRouter(prefix='/tasks', tags=['tasks'])
 
@@ -25,11 +27,15 @@ def by_id_to_task(id: int, db: Session = Depends(get_db)):
 
 # 创建数据
 @router.post('/tasks', response_model=TaskResponse, summary="创建任务", description='创建一条新任务')
-def create_task(item: TaskCreate, db: Session = Depends(get_db)):
+def create_task(
+    item: TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     project = crud_project.get_project_by_id(db, item.project_id)
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={'msg':"项目不存在"})
-    task = crud_tasks.create_task(db, item)
+    task = crud_tasks.create_task(db, item, creator_id=current_user.id)
     return task
 
 

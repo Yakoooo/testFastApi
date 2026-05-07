@@ -1,13 +1,9 @@
-from fastapi import Depends
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.models.tasks import Task
-from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
-
-from app.api.deps import get_current_user
 
 # 根据id搜索项目
 def get_project_by_id(db: Session, project_id: int):
@@ -33,6 +29,7 @@ def list_projects(
         id=project.id,
         name=project.name,
         description=project.description,
+        owner_id=project.owner_id,
         created_at=project.created_at,
         updated_at=project.updated_at,
         task_count=task_count
@@ -41,12 +38,20 @@ def list_projects(
 
 
 # 创建项目
-def create_project(db: Session, project_create: ProjectCreate, get_current_user: User = Depends(get_current_user)):
-    project = Project(**project_create.model_dump(), owner_id = get_current_user)
+def create_project(db: Session, project_create: ProjectCreate, owner_id: int):
+    project = Project(**project_create.model_dump(), owner_id=owner_id)
     db.add(project)
     db.commit()
     db.refresh(project)
-    return project
+    return ProjectResponse(
+        id=project.id,
+        name=project.name,
+        description=project.description,
+        owner_id=project.owner_id,
+        created_at=project.created_at,
+        updated_at=project.updated_at,
+        task_count=0
+        )
 
 
 # 更新项目

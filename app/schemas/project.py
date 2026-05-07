@@ -19,6 +19,7 @@ class ProjectResponse(BaseModel):
     id: int
     name: str
     description: str | None = None
+    owner_id: int
     created_at: datetime
     updated_at: datetime
     task_count: int

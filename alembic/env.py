@@ -6,6 +6,7 @@ from app.db.base import Base
 from app.models.project import Project
 from app.models.tasks import Task
 from app.models.user import User
+from app.models.projectMember import ProjectMember
 
 from alembic import context
 

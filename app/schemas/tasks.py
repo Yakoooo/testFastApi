@@ -25,6 +25,8 @@ class TaskResponse(BaseModel):
     description: str | None = None
     status: TaskStatus
     project_id: int
+    creator_id: int
+    assignee_id: int | None = None
     created_at: datetime
     updated_at: datetime
 

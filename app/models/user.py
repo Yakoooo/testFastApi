@@ -1,9 +1,13 @@
 from datetime import datetime,UTC
 
 from sqlalchemy import Boolean, Integer, DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.project import Project
 
 # 创建一个用户表
 
@@ -19,3 +23,4 @@ class User(Base):
     DateTime(timezone=True),
     default=lambda: datetime.now(UTC),
     )
+    projects: Mapped[list["Project"]] = relationship("Project", back_populates="owner")

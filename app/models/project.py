@@ -6,10 +6,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
 
 from app.db.base import Base
-from app.models.user import User
 
 if TYPE_CHECKING:
     from app.models.tasks import Task
+    from app.models.user import User
 
 
 class Project(Base):
@@ -24,6 +24,13 @@ class Project(Base):
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
-    tasks: Mapped[list["Task"]] = relationship("Task", back_populates="project")
 
-    owner_id:Mapped[int] = mapped_column(ForeignKey(User.id), nullable=False, index=True)
+    tasks: Mapped[list["Task"]] = relationship(
+        "Task",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    owner: Mapped["User"] = relationship("User", back_populates="projects")

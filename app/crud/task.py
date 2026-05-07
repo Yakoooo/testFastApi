@@ -1,10 +1,7 @@
-from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
 from app.models.tasks import Task
-from app.models.user import User
 from app.schemas.tasks import TaskCreate, TaskUpdate
 
 # 根据id搜索任务
@@ -25,10 +22,10 @@ def list_tasks(db: Session,
     return db.scalars(stmt).all()
 
 # 创建任务
-def create_task(db: Session, task_create: TaskCreate, current_user: User = Depends(get_current_user)):
+def create_task(db: Session, task_create: TaskCreate, creator_id: int):
     task = Task(
         **task_create.model_dump(),
-        creator_id=current_user.id
+        creator_id=creator_id,
     )
     db.add(task)
     db.commit()
