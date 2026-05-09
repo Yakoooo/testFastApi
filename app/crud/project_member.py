@@ -29,10 +29,11 @@ def create_member(
     return member
 
 # 根据项目获取用户表。指定用户
-def get_member_by_project_id(db: Session, project_id: int)->list(User):
+def get_member_by_project_id(db: Session, project_id: int) -> list[User]:
     stmt = (
         select(User)
-        .outerjoin(ProjectMember, ProjectMember.project_id == project_id)
-        .where(project_id == ProjectMember.project_id))
+        .join(ProjectMember, ProjectMember.user_id == User.id)
+        .where(ProjectMember.project_id == project_id)
+    )
     # 根据用户信息表，从用户表获取用户
     return list(db.scalars(stmt).all())

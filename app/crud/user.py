@@ -24,3 +24,8 @@ def create_user(db: Session, user_create: userCreate) -> User:
     db.commit()
     db.refresh(user)
     return user
+
+# 获取用户列表
+def get_user_list(db: Session, skip: int = 0, limit: int = 20) -> list[User]:
+    user_list = db.scalars(select(User).offset(skip).limit(limit)).all()
+    return list(user_list)

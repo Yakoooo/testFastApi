@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
@@ -76,5 +76,6 @@ def update_project(db: Session, project: Project, project_update: ProjectUpdate)
 
 # 删除项目
 def delete_project(db: Session, project: Project) -> None:
+    db.execute(delete(ProjectMember).where(ProjectMember.project_id == project.id))
     db.delete(project)
     db.commit()

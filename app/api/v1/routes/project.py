@@ -13,6 +13,7 @@ from app.schemas.project import (
     ProjectResponse,
     ProjectUpdate,
 )
+from app.schemas.user import userResponse
 from app.services.project_permission import require_project_owner
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -117,13 +118,12 @@ def add_member(
     )
 
 
-# 查看任务成员
-@router.get("/project/{project_id}/members")
+# 查看项目成员
+@router.get("/project/{project_id}/members", response_model=list[userResponse])
 def get_members_by_id(project_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
     ):
     # 搜索是否存在项目
-    project = require_project_owner(db, project_id, current_user.id)
-    # 通过项目检索是否存在用户
-    
+    require_project_owner(db, project_id, current_user.id)
+    return crud_project_member.get_member_by_project_id(db, project_id)
