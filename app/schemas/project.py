@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProjectCreate(BaseModel):
@@ -23,3 +23,14 @@ class ProjectResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     task_count: int
+
+class ProjectMemberCreate(BaseModel):
+    user_list: list[int] = Field(min_length=1)
+
+
+class ProjectMemberAddResponse(BaseModel):
+    added_user_ids: list[int]
+    skipped_user_ids: list[int]
+
+
+project_member_list = ProjectMemberCreate

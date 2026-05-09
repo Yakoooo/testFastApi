@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.project import Project
 from app.models.tasks import Task
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.models.projectMember import ProjectMember
 
 # 根据id搜索项目
 def get_project_by_id(db: Session, project_id: int):
@@ -41,6 +42,15 @@ def list_projects(
 def create_project(db: Session, project_create: ProjectCreate, owner_id: int):
     project = Project(**project_create.model_dump(), owner_id=owner_id)
     db.add(project)
+    # 添加权限控制，添加项目的时候添加用户关系表
+    db.flush()
+    member = ProjectMember(
+        project_id = project.id,
+        user_id = owner_id,
+        role="owner"
+    )
+    db.add(member)
+
     db.commit()
     db.refresh(project)
     return ProjectResponse(
