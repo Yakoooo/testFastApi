@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.crud import project as crud_project
 from app.crud import project_member as crud_project_member
+from app.crud import user as curd_user
 from app.db.deps import get_db
 from app.models.user import User
 from app.schemas.project import (
@@ -14,33 +15,33 @@ from app.schemas.project import (
     ProjectUpdate,
 )
 from app.schemas.user import userResponse
-from app.services.project_permission import require_project_owner
+from app.services.project_permission import require_project_member, require_project_owner
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-@router.get("/project", response_model=list[ProjectResponse])
+# 获取用户相关项目列表
+@router.get("/", response_model=list[ProjectResponse])
 def list_projects(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     skip: int = 0,
     limit: int = 20,
 ):
-    return crud_project.list_projects(db, skip, limit)
+    return crud_project.list_projects(db, current_user.id, skip, limit)
 
-
-@router.get("/project/{project_id}", response_model=ProjectResponse)
+# 根据项目id获取项目信息
+@router.get("/{project_id}", response_model=ProjectResponse)
 def get_project(
     project_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    project = crud_project.get_project_by_id(db, project_id)
-    if project is None:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    return project
+    return require_project_member(db, project_id, current_user.id)
 
 
-@router.post("/project", response_model=ProjectResponse, status_code=201)
+
+@router.post("/", response_model=ProjectResponse, status_code=201)
 def create_project(
     project_create: ProjectCreate,
     db: Session = Depends(get_db),
@@ -49,35 +50,33 @@ def create_project(
     return crud_project.create_project(db, project_create, owner_id=current_user.id)
 
 
-@router.put("/project/{project_id}", response_model=ProjectResponse)
+# 更新任务信息
+@router.put("/{project_id}", response_model=ProjectResponse)
 def update_project(
     project_id: int,
     project_update: ProjectUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    project = crud_project.get_project_by_id(db, project_id)
-    if project is None:
-        raise HTTPException(status_code=404, detail="Project not found")
-
+    project = require_project_owner(db, project_id, current_user.id)
     return crud_project.update_project(db, project, project_update)
 
 
-@router.delete("/project/{project_id}", status_code=204)
+# 删除任务
+@router.delete("/{project_id}", status_code=204)
 def delete_project(
     project_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    project = crud_project.get_project_by_id(db, project_id)
-    if project is None:
-        raise HTTPException(status_code=404, detail="Project not found")
-
+    project = require_project_owner(db, project_id, current_user.id)
     crud_project.delete_project(db, project)
     return
 
 
 # 添加成员
 @router.post(
-    "/project/{project_id}/members",
+    "/{project_id}/members",
     response_model=ProjectMemberAddResponse,
     status_code=status.HTTP_201_CREATED,
 )
@@ -119,11 +118,12 @@ def add_member(
 
 
 # 查看项目成员
-@router.get("/project/{project_id}/members", response_model=list[userResponse])
+@router.get("/{project_id}/members", response_model=list[userResponse])
 def get_members_by_id(project_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
     ):
+    # GET 查看成员：项目成员即可
+    require_project_member(db, project_id, current_user.id)
     # 搜索是否存在项目
-    require_project_owner(db, project_id, current_user.id)
     return crud_project_member.get_member_by_project_id(db, project_id)

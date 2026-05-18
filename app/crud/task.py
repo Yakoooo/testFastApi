@@ -3,19 +3,27 @@ from sqlalchemy.orm import Session
 
 from app.models.tasks import Task
 from app.schemas.tasks import TaskCreate, TaskUpdate
+from app.models.projectMember import ProjectMember
 
 # 根据id搜索任务
 def get_task_by_id(db: Session, task_id: int):
     return db.get(Task, task_id)
 
 # 获取列表
-def list_tasks(db: Session,
+def list_tasks_for_user(
+               db: Session,
+               user_id: int,
                status: str | None = None,
                skip: int = 0, 
                limit: int = 10
                ) -> list[Task]:
     # 创建查询工具，真正启动数据库查询在 scalars
-    stmt = select(Task)
+    # 获取对应用户的任务列表。 不要all
+    stmt = (
+        select(Task)
+        .join(ProjectMember, ProjectMember.project_id == Task.project_id)
+        .where(ProjectMember.user_id == user_id)
+        )
     if status is not None:
         stmt = stmt.where(Task.status == status)
     stmt = stmt.offset(skip).limit(limit)
