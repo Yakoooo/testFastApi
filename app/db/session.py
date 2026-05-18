@@ -5,7 +5,7 @@ from app.core.config import settings
 
 # 创建引擎和会话
 engine = create_engine(
-    settings.DATABASE_URL,
+    settings.database_url,
      echo=True
 )
 

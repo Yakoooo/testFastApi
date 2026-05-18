@@ -7,7 +7,7 @@ from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.models.projectMember import ProjectMember
 
 # 根据id搜索项目
-def get_project_by_id(db: Session, project_id: int, user_id: int):
+def get_project_by_id(db: Session, project_id: int, user_id: int | None = None):
     stmt = (
         select(Project, func.count(Task.id).label("task_count"))
         .outerjoin(Task, Task.project_id == Project.id)

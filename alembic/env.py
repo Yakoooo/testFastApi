@@ -7,12 +7,14 @@ from app.models.project import Project
 from app.models.tasks import Task
 from app.models.user import User
 from app.models.projectMember import ProjectMember
+from app.core.config import settings
 
 from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
