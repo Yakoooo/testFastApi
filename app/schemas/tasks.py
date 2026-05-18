@@ -19,6 +19,21 @@ class TaskPriority(str, Enum):
     high = "high"
     urgent = "urgent"
 
+
+class TaskSortBy(str, Enum):
+    created_at = "created_at"
+    updated_at = "updated_at"
+    due_date = "due_date"
+    priority = "priority"
+    status = "status"
+    title = "title"
+
+
+class SortOrder(str, Enum):
+    asc = "asc"
+    desc = "desc"
+
+
 # 任务创建
 class TaskCreate(BaseModel):
     title: str = Field(min_length=1, max_length=20)
@@ -34,7 +49,7 @@ class TaskUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = None
     status: TaskStatus | None = None
-    priority: TaskPriority = TaskPriority.medium
+    priority: TaskPriority | None = None
     due_date: datetime | None = None
     assignee_id: int | None = None
 
@@ -59,3 +74,29 @@ class TaskResponse(BaseModel):
     updated_at: datetime
 
 
+class TaskCommentCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class TaskCommentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    task_id: int
+    author_id: int
+    content: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class TaskActivityResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    task_id: int
+    actor_id: int
+    action: str
+    field: str | None = None
+    old_value: str | None = None
+    new_value: str | None = None
+    created_at: datetime

@@ -1,9 +1,11 @@
+from datetime import UTC, datetime
+
 from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
 from app.models.tasks import Task
-from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
+from app.schemas.project import ProjectCreate, ProjectResponse, ProjectTaskStats, ProjectUpdate
 from app.models.projectMember import ProjectMember
 
 # 根据id搜索项目
@@ -20,7 +22,43 @@ def get_project_by_id(db: Session, project_id: int, user_id: int | None = None):
 
     project, task_count = row
     project.task_count = task_count
+    project.task_stats = get_project_task_stats(db, project_id)
     return project
+
+
+def get_project_task_stats(db: Session, project_id: int) -> ProjectTaskStats:
+    total = db.scalar(
+        select(func.count(Task.id)).where(Task.project_id == project_id)
+    ) or 0
+
+    status_rows = db.execute(
+        select(Task.status, func.count(Task.id))
+        .where(Task.project_id == project_id)
+        .group_by(Task.status)
+    ).all()
+    priority_rows = db.execute(
+        select(Task.priority, func.count(Task.id))
+        .where(Task.project_id == project_id)
+        .group_by(Task.priority)
+    ).all()
+    overdue = db.scalar(
+        select(func.count(Task.id)).where(
+            Task.project_id == project_id,
+            Task.due_date < datetime.now(UTC),
+            Task.status.not_in(["done", "canceled"]),
+        )
+    ) or 0
+
+    return ProjectTaskStats(
+        total=total,
+        by_status={_enum_value(status): count for status, count in status_rows if status is not None},
+        by_priority={_enum_value(priority): count for priority, count in priority_rows if priority is not None},
+        overdue=overdue,
+    )
+
+
+def _enum_value(value):
+    return value.value if hasattr(value, "value") else str(value)
 
 # 根据任务id搜索项目
 def get_project_by_taskid(db: Session, task_id: int):
@@ -98,7 +136,7 @@ def update_project(db: Session, project: Project, project_update: ProjectUpdate)
         setattr(project, field, value)
     db.commit()
     db.refresh(project)
-    return project
+    return get_project_by_id(db, project.id)
 
 
 # 删除项目

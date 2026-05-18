@@ -13,6 +13,13 @@ class ProjectUpdate(BaseModel):
     description: str | None = None
 
 
+class ProjectTaskStats(BaseModel):
+    total: int = 0
+    by_status: dict[str, int] = Field(default_factory=dict)
+    by_priority: dict[str, int] = Field(default_factory=dict)
+    overdue: int = 0
+
+
 class ProjectResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -23,6 +30,7 @@ class ProjectResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     task_count: int
+    task_stats: ProjectTaskStats = Field(default_factory=ProjectTaskStats)
 
 class ProjectMemberCreate(BaseModel):
     user_list: list[int] = Field(min_length=1)

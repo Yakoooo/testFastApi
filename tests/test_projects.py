@@ -1,3 +1,6 @@
+from datetime import UTC, datetime, timedelta
+
+
 def test_projects_require_authentication(client):
     response = client.get("/api/v1/projects/")
 
@@ -67,3 +70,52 @@ def test_project_owner_can_add_and_list_members(
     assert members_response.status_code == 200
     usernames = {member["username"] for member in members_response.json()}
     assert usernames == {"alice", "bob"}
+
+
+def test_project_detail_includes_task_statistics(client, auth_headers, create_project):
+    project = create_project()
+    now = datetime.now(UTC)
+
+    task_payloads = [
+        {
+            "title": "Late task",
+            "project_id": project["id"],
+            "status": "todo",
+            "priority": "urgent",
+            "due_date": (now - timedelta(days=1)).isoformat(),
+        },
+        {
+            "title": "Shipped task",
+            "project_id": project["id"],
+            "status": "done",
+            "priority": "high",
+            "due_date": (now - timedelta(days=2)).isoformat(),
+        },
+        {
+            "title": "Next task",
+            "project_id": project["id"],
+            "status": "in_progress",
+            "priority": "high",
+            "due_date": (now + timedelta(days=1)).isoformat(),
+        },
+    ]
+    for payload in task_payloads:
+        response = client.post("/api/v1/tasks", json=payload, headers=auth_headers)
+        assert response.status_code == 200
+
+    response = client.get(f"/api/v1/projects/{project['id']}", headers=auth_headers)
+    assert response.status_code == 200
+    project_detail = response.json()
+
+    assert project_detail["task_count"] == 3
+    assert project_detail["task_stats"]["total"] == 3
+    assert project_detail["task_stats"]["by_status"] == {
+        "todo": 1,
+        "in_progress": 1,
+        "done": 1,
+    }
+    assert project_detail["task_stats"]["by_priority"] == {
+        "urgent": 1,
+        "high": 2,
+    }
+    assert project_detail["task_stats"]["overdue"] == 1
